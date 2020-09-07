@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -29,7 +30,7 @@ func createTicket(w http.ResponseWriter, r *http.Request) {
 	//get request body
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Fprintf(w, "Kindly enter data with the event title and description only in order to update")
+		fmt.Fprintf(w, " enter data to create a ticket")
 	}
 
 	json.Unmarshal(reqBody, &newTicket)
@@ -44,10 +45,24 @@ func getAllTickets(w http.ResponseWriter, r *http.Request) {
 	var db *gorm.DB = openDataBase()
 	defer db.Close()
 
-	eventID := mux.Vars(r)["eventid"]
+	// get query parameters
+	var eventID string = strings.ToLower(r.URL.Query().Get("eventid"))
+
 	var tickets []ticket
 
-	db.Where("EventID=?", eventID).Find(&tickets)
+	db.Find(&tickets)
+
+	// filter by eventID
+	if len(eventID) > 0 {
+		for i, ticket := range tickets {
+			if strings.ToLower(ticket.EventID) != strings.ToLower(eventID) {
+				tickets = append(tickets[:i], tickets[i+1:]...)
+
+			}
+
+		}
+	}
+
 	json.NewEncoder(w).Encode(tickets)
 }
 
@@ -79,7 +94,7 @@ func getOneTicket(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func changeTicket(w http.ResponseWriter, r *http.Request) {
+func modifyTicket(w http.ResponseWriter, r *http.Request) {
 
 	//open databse
 	var db *gorm.DB = openDataBase()

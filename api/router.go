@@ -23,9 +23,9 @@ func createEventsRouter() {
 
 	//tikcets
 	router.HandleFunc("/ticket", createTicket).Methods("POST")
-	router.HandleFunc("/tickets/eventid", getAllTickets).Methods("GET")
+	router.HandleFunc("/tickets", getAllTickets).Methods("GET")
 	router.HandleFunc("/tickets/{id}", getOneTicket).Methods("GET")
-	router.HandleFunc("/tickets/{id}", changeTicket).Methods("PATCH")
+	router.HandleFunc("/tickets/{id}", modifyTicket).Methods("PATCH")
 	router.HandleFunc("/tickets/{id}", deleteTicket).Methods("DELETE")
 
 	log.Fatal(http.ListenAndServe(":8080", router))
