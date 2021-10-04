@@ -28,5 +28,11 @@ func createEventsRouter() {
 	router.HandleFunc("/tickets/{id}", modifyTicket).Methods("PATCH")
 	router.HandleFunc("/tickets/{id}", deleteTicket).Methods("DELETE")
 
+	// users
+
+	router.HandleFunc("/register", Register).Methods("POST")
+	router.HandleFunc("/login", Login).Methods("POST")
+	router.HandleFunc("/logout", Logout).Methods("POST")
+
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
