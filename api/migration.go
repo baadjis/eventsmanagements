@@ -16,7 +16,7 @@ func openDataBase() *gorm.DB {
 	return db
 }
 
-var err error
+//var err error
 
 func initialMigration() {
 	db, err := gorm.Open("sqlite3", "events.db")
@@ -27,6 +27,6 @@ func initialMigration() {
 	}
 	defer db.Close()
 
-	db.AutoMigrate(&event{}, &ticket{})
+	db.AutoMigrate(&event{}, &ticket{}, User{}, Token{})
 
 }
