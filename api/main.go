@@ -5,7 +5,8 @@ import (
 )
 
 func main() {
-	initialMigration()
-	createEventsRouter()
+	InitialMigration()
+
+	CreateEventsRouter()
 
 }

@@ -16,11 +16,13 @@ import (
 type event struct {
 	gorm.Model
 
-	Title       string
-	Description string
-	City        string
-	Address     string
-	StartDate   string
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	City        string `json:"city"`
+	Address     string `json:"address"`
+	StartDate   string `json:"startdate"`
+	EndDate     string `json:"enddate"`
+	Creator     string `json:"creator"`
 }
 
 func homeLink(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +50,7 @@ func createEvent(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newEvent)
 }
 
-func getOneEvent(w http.ResponseWriter, r *http.Request) {
+func getSingleEvent(w http.ResponseWriter, r *http.Request) {
 	//open databse
 	var db *gorm.DB = openDataBase()
 	defer db.Close()

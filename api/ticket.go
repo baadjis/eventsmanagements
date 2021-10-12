@@ -14,10 +14,10 @@ import (
 
 type ticket struct {
 	gorm.Model
-	Owner      string
-	Number     string
-	EventID    string
-	EventTitle string
+	Owner      string `json:"owner"`
+	Number     string `json:"number"`
+	EventID    string `json:"event"`
+	EventTitle string `json:"eventtitle"`
 }
 
 func createTicket(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +55,7 @@ func getAllTickets(w http.ResponseWriter, r *http.Request) {
 	// filter by eventID
 	if len(eventID) > 0 {
 		for i, ticket := range tickets {
-			if strings.ToLower(ticket.EventID) != strings.ToLower(eventID) {
+			if strings.EqualFold(ticket.EventID, eventID) {
 				tickets = append(tickets[:i], tickets[i+1:]...)
 
 			}

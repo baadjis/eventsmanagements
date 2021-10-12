@@ -6,11 +6,13 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 )
 
@@ -28,6 +30,7 @@ type Authentication struct {
 }
 
 type Token struct {
+	gorm.Model
 	Email       string `json:"email"`
 	TokenString string `json:"token"`
 }
@@ -81,17 +84,22 @@ func GenerateJWT(email string) (string, error) {
 //check whether user is authorized or not
 func IsAuthorized(handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		if r.Header["Token"] == nil {
+		auth := r.Header["Authorization"]
+		fmt.Println("auth", auth)
+		if len(auth) == 0 {
 			var err Error
+			fmt.Println("notoken")
 			err = SetError(err, "No Token Found")
 			json.NewEncoder(w).Encode(err)
 			return
 		}
-
+		tokens := strings.Split(auth[0], " ")
 		var mySigningKey = []byte(SECRET_KEY)
-
-		_, err := jwt.Parse(r.Header["Token"][0], func(token *jwt.Token) (interface{}, error) {
+		fmt.Println("tokens", tokens)
+		tokenString := tokens[len(tokens)-1]
+		fmt.Println("tokenstring", tokenString)
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			fmt.Println("parse", token)
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("there was an error in parsing token")
 			}
@@ -105,9 +113,16 @@ func IsAuthorized(handler http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		if _, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+
+			handler.ServeHTTP(w, r)
+			return
+
+		}
+
 		var reserr Error
 		reserr = SetError(reserr, "Not Authorized.")
-		json.NewEncoder(w).Encode(err)
+		json.NewEncoder(w).Encode(reserr)
 	}
 }
 
@@ -143,14 +158,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	var db *gorm.DB = openDataBase()
 	defer db.Close()
 	err := db.Where("email=?", authuser.Email).First(&dbUser).Error
-
+	fmt.Print(dbUser.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"message":"` + err.Error() + `"}`))
 		return
 	}
 
-	check := CheckPasswordHash(dbUser.Password, authuser.Password)
+	check := CheckPasswordHash(authuser.Password, dbUser.Password)
 
 	if !check {
 		var err Error
@@ -194,5 +209,27 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	w.Write([]byte(`{"message":"loggedout "}`))
+
+}
+
+func GetUserByMail(email string) User {
+	var dbUser User
+	var db *gorm.DB = openDataBase()
+	defer db.Close()
+	db.Where("email = ?", email).First(&dbUser)
+	return dbUser
+
+}
+
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("get user")
+	email := mux.Vars(r)["email"]
+	fmt.Println(email)
+	user := GetUserByMail(email)
+	fmt.Println("get user", user)
+
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(user)
 
 }

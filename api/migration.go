@@ -18,9 +18,9 @@ func openDataBase() *gorm.DB {
 
 //var err error
 
-func initialMigration() {
+func InitialMigration() {
 	db, err := gorm.Open("sqlite3", "events.db")
-	db.DropTable(&event{})
+	db.DropTableIfExists(&event{}, &User{}, &Token{}, &ticket{})
 	if err != nil {
 		fmt.Println(err.Error())
 		panic("failed to connect to database")
